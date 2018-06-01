@@ -1,15 +1,27 @@
-import withData from '../lib/withData'
-import withIntl from '../lib/withIntl';
-import React from 'react'
-import { addCollectiveToEditData, addGetLoggedInUserFunction } from '../graphql/queries';
-import ErrorPage from '../components/ErrorPage';
+import React from 'react';
+import PropTypes from 'prop-types';
+
 import EditCollective from '../components/EditCollective';
+import ErrorPage from '../components/ErrorPage';
+
+import { addCollectiveToEditData } from '../graphql/queries';
+
+import withData from '../lib/withData';
+import withIntl from '../lib/withIntl';
+import withLoggedInUser from '../lib/withLoggedInUser';
 
 class EditCollectivePage extends React.Component {
 
   static getInitialProps ({ query: { slug } }) {
     return { slug, ssr: false };
   }
+
+  static propTypes = {
+    slug: PropTypes.string, // for addCollectiveToEditData
+    ssr: PropTypes.bool,
+    data: PropTypes.object.isRequired, // from withData
+    getLoggedInUser: PropTypes.func.isRequired, // from withLoggedInUser
+  };
 
   constructor(props) {
     super(props);
@@ -18,7 +30,7 @@ class EditCollectivePage extends React.Component {
 
   async componentDidMount() {
     const { getLoggedInUser } = this.props;
-    const LoggedInUser = getLoggedInUser && await getLoggedInUser();
+    const LoggedInUser = await getLoggedInUser();
     this.setState({ LoggedInUser, loading: false });
   }
 
@@ -27,7 +39,7 @@ class EditCollectivePage extends React.Component {
     const { loading, LoggedInUser } = this.state;
 
     if (loading || !data.Collective) {
-      return (<ErrorPage loading={loading} data={data} />)
+      return (<ErrorPage loading={loading} data={data} />);
     }
 
     const collective = data.Collective;
@@ -42,4 +54,4 @@ class EditCollectivePage extends React.Component {
   }
 }
 
-export default withData(addGetLoggedInUserFunction(addCollectiveToEditData(withIntl(EditCollectivePage))));
+export default withData(withIntl(withLoggedInUser(addCollectiveToEditData(EditCollectivePage))));
